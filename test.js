@@ -3,9 +3,7 @@ var assert = require('assert')
   , from = require('from')
   , sentence = ''
 
-var periods = new Sentinal(new Buffer('|||'))
-
-var source = from([
+var source_data = [
     '||| is the delimiter'
   , 'Sometimes it fits|||'
   , 'Sometimes it might take'
@@ -14,9 +12,9 @@ var source = from([
   , '||| or ||| even ||| three!'
   , 'And sometimes only part ||'
   , '| Of the separator fits.'
-])
+]
 
-expected = [
+var expected = [
     '|||'
   , ' is the delimiter'
   , 'Sometimes it fits'
@@ -39,10 +37,36 @@ expected = [
   , ' Of the separator fits.'
 ]
 
-var s = source.pipe(periods)
+test_bin()
 
-i = 0
-s.on('readable', function() {
-  assert.equal(s.read().toString(), expected[i])
-  ++i
-})
+function test_bin() {
+  function bin() {
+
+    var bin_periods = new Sentinal(new Buffer('|||'))
+      , binary_source = from(source_data.slice())
+
+    var b = binary_source
+      .pipe(bin_periods)
+
+    return b
+  }
+
+  var i = 0
+
+  var b = bin()
+
+  b.on('readable', function() {
+    var z = b.read()
+
+    assert.equal(z.toString(), expected[i])
+    ++i
+  })
+
+  var j = 0
+
+  bin().on('data', function(data) {
+    assert.equal(data.toString(), expected[j])
+    ++j
+  })
+}
+

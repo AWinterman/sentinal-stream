@@ -7,10 +7,9 @@ Any time you want to take a particular action if a certain value appears in a st
 
 ## API ##
 
-`sentinal = new Sentinal(sentinal_value) ` returns a [transform
+`sentinal = new Sentinal(sep) ` returns a [transform
 stream](http://nodejs.org/api/stream.html#stream_class_stream_transform).
-`sentinal_value` is an array or a string or a buffer. You probably want 
-`sentinal_value` match the encoding of the data you are piping in. 
+`sep` is a buffered string. It will be stored on `sentinal.seperator`.
 
 # Example #
 

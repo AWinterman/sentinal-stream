@@ -10,7 +10,7 @@ module.exports = Sentinal
 function Sentinal(separator) {
   stream.Transform.call(this)
   this.separator = separator
-  this._fragment = false
+  this._fragment = new Buffer('')
 }
 
 util.inherits(Sentinal, stream.Transform)
@@ -19,41 +19,43 @@ Sentinal.prototype._transform = function(data, encoding, done) {
   var endpoint
     , indices
     , old_idx
+    , chunk
     , next
     , out
     , idx
 
-  if(this._fragment) {
-    chunk = Buffer.concat([this._fragment, data])
-  } else {
-    chunk = data
-  }
-  
+  chunk = Buffer.concat([this._fragment, data])
   indices = find_indices(chunk, this.separator)
 
-  idx = -1
-  
+  // if we haven't found any seperators, look for cutoff seperators at the
+  // boundary, and emit everything but a partial seperator
+
   if(indices.length === 0) {
     this._fragment = boundary(chunk, this.separator)
     this.push(chunk.slice(0, chunk.length - this._fragment.length))
+
     return done()
   }
+
+  idx = -1
+
+  // otherwise each time we encounter the seperator, emit from the previous
+  // seperator to the current one, and then emit a seperator.
 
   while(indices.length) {
     old_idx = idx > -1 ? idx + this.separator.length : 0
     idx = indices.shift()
 
     out = chunk.slice(old_idx, idx)
-    
+
     this.push(out)
     this.push(this.separator)
   }
 
   if(idx !== -1) {
     this.push(chunk.slice(idx + this.separator.length))
-    return done()
   }
-  
+
   return done()
 }
 
@@ -65,6 +67,7 @@ function find_indices(chunk, separator) {
     indices.push(idx)
     idx = indexOf(chunk, separator, idx + 1)
   }
+
   return indices
 }
 
@@ -83,5 +86,5 @@ function boundary(data, separator) {
     }
   }
 
-  return false
+  return new Buffer('')
 }
