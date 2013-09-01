@@ -1,0 +1,24 @@
+{
+  "name": "sentinal-stream",
+  "version": "0.0.0",
+  "description": "A transform stream which segregates a sentinel value into its own 'data' event.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "sentinel",
+    "split",
+    "stream",
+    "flow",
+    "control"
+  ],
+  "author": "Andrew Winterman",
+  "license": "MIT",
+  "devDependencies": {
+    "from": "~0.1.3"
+  },
+  "dependencies": {
+    "index-of-js": "~1.0.0"
+  }
+}
