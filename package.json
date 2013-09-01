@@ -1,6 +1,6 @@
 {
   "name": "sentinal-stream",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A transform stream which segregates a sentinel value into its own 'data' event.",
   "main": "index.js",
   "scripts": {
