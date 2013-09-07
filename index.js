@@ -11,9 +11,9 @@ function Sentinal(separator, options) {
   stream.Transform.call(this, options)
   this.separator = separator
   this.options = options || {}
-  this._fragment = this.options.decodeStrings ?
-    '' :
-    new Buffer('', this.options.encoding)
+  this._concat = null
+  this._construct_fragment = null
+  this._fragment = []
 }
 
 util.inherits(Sentinal, stream.Transform)
@@ -29,18 +29,18 @@ Sentinal.prototype._transform = function(data, encoding, done) {
     , out
     , idx
 
-  out = []
-
-  if(Buffer.isBuffer(data)) {
-    // then buffer concat
-    chunk = Buffer.concat([this._fragment, data])
-  } else if(Array.isArray(data)) {
-    // then array concat
-    chunk = this._fragment.concat(data)
-  } else {
-    // better be a string
-    chunk = this._fragment + data
+  if(!this._concat) {
+    if(Buffer.isBuffer(data)) {
+      this._concat = buffer_concat
+    } else if(Array.isArray(data)) {
+      this._concat = array_concat
+    } else {
+      this._concat = string_concat
+    }
   }
+
+  out = []
+  chunk = this._concat(this._fragment, data)
 
   indices = find_indices(chunk, this.separator)
 
@@ -48,7 +48,6 @@ Sentinal.prototype._transform = function(data, encoding, done) {
   // boundary, and emit everything but a partial seperator
 
   // handle the case of no matches.
-
 
   idx = -1
 
@@ -70,23 +69,29 @@ Sentinal.prototype._transform = function(data, encoding, done) {
 
   remaining = chunk.slice(idx + this.separator.length)
 
-  fragment_arr = boundary(remaining, this.separator)
-
-  if(Buffer.isBuffer(chunk)) {
-    this._fragment = new Buffer(fragment_arr)
-  } else if(Array.isArray(chunk)) {
-    this._fragment = fragment_arr
-  } else {
-    this._fragment = fragment_arr.join('')
-  }
+  this._fragment = boundary(remaining, this.separator)
 
   out.push(remaining.slice(0, remaining.length - this._fragment.length))
 
   for(var i = 0, len = out.length; i < len; ++i) {
-    out[i].length && this.push(out[i])
+    if(out[i].length) {
+      this.push(out[i])
+    }
   }
 
   return done()
+}
+
+function buffer_concat(arr, data) {
+  return Buffer.concat([new Buffer(arr), data])
+}
+
+function array_concat(arr, data) {
+  return [].concat([arr, data])
+}
+
+function string_concat(arr, data) {
+  return arr.join('') + data
 }
 
 function find_indices(chunk, separator) {
@@ -110,7 +115,7 @@ function boundary(data, separator) {
   while(data_arr.length && separator_arr.length) {
     var idx = indexOf(data_arr, separator_arr, idx + 1)
 
-    if(idx === data_arr.length - separator_arr.length) {
+    if(idx > -1 && idx === data_arr.length - separator_arr.length) {
       return separator_arr
     }
 

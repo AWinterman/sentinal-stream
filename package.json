@@ -4,7 +4,7 @@
   "description": "A transform stream which segregates a sentinel value into its own 'data' event.",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "node test/test.js"
   },
   "keywords": [
     "sentinel",
